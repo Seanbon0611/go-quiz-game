@@ -13,14 +13,16 @@ type questionsAndAnswers struct {
 }
 
 func main() {
+	//opens the csv file to be able to read
 	file, err := os.Open("./problems.csv")
 	if err != nil {
 		log.Fatal(err)
 	}
+	//what gets opened must be closed, don't forget!
 	defer file.Close()
+	//turns contents of the csv file into somethijng readable rather than just a pointer to the csv file contents
 	reader, _ := csv.NewReader(file).ReadAll()
-	fmt.Println(reader)
-
+	//loop through the reader and create new instances of the questionsAndAnswers struct and print the results
 	for _, line := range reader {
 		qAndA := questionsAndAnswers{
 			Question: line[0],
