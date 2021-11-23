@@ -28,9 +28,16 @@ func main() {
 	//turns contents of the csv file into something readable rather than just a pointer to the csv file contents
 	reader, _ := csv.NewReader(file).ReadAll()
 	problems := parseQAndA(reader)
+
+	total := quiz(problems)
+
+	fmt.Printf("your score is %d/%d\n", total, len(problems))
+}
+
+//loop through each problem within the slice of problems, give the question and have the customer submit the answer
+func quiz(problems []questionsAndAnswers) int {
 	//keeps track of how many answers the user gets correct
 	correctAnswers := 0
-	//loop through each problem within the slice of problems, give the question and have the customer submit the answer
 	for i, problem := range problems {
 		fmt.Printf("Problem # %d: %s = \n", i+1, problem.Question)
 		var answer string
@@ -39,7 +46,7 @@ func main() {
 			correctAnswers += 1
 		}
 	}
-	fmt.Printf("your score is %d/%d\n", correctAnswers, len(problems))
+	return correctAnswers
 }
 
 //function to parse the questions and answers into a slice that will hold each question and answer struct
