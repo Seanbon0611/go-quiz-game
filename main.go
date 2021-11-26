@@ -21,6 +21,7 @@ func main() {
 	csvfile := flag.String("csv", "problems.csv", "add in csv file in the format of `question,answer`")
 	//timelimit flag, this will allow users to customize the timelimit for the quiz
 	timeLimit := flag.Int("limit", 30, "time limit for the quiz in seconds")
+	//shuffle flag that where the user can configure if they want to shuffle the problems or not
 	shuffleQuiz := flag.Bool("shuffle", false, "Shuffles the quiz problems")
 	flag.Parse()
 
