@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+	"time"
 )
 
 type questionsAndAnswers struct {
@@ -14,8 +16,10 @@ type questionsAndAnswers struct {
 }
 
 func main() {
+	//flag where the user can input a csv file with thier own problems
 	csvfile := flag.String("csv", "problems.csv", "A quiz game CLI application that takes in csv file in the format of `question,answer`")
-
+	//timelimit flag, this will allow users to customize the timelimit for the quiz
+	timeLimit := flag.Int("limit", 30, "time limit for the quiz in seconds")
 	flag.Parse()
 
 	//opens the csv file to be able to read
@@ -27,26 +31,36 @@ func main() {
 	defer file.Close()
 	//turns contents of the csv file into something readable rather than just a pointer to the csv file contents
 	reader, _ := csv.NewReader(file).ReadAll()
+
 	problems := parseQAndA(reader)
+	//using the time package, this sets up the timer that will run the test for n seconds
+	timer := time.NewTimer(time.Duration(*timeLimit) * time.Second)
 
-	total := quiz(problems)
-
-	fmt.Printf("your score is %d/%d\n", total, len(problems))
-}
-
-//loop through each problem within the slice of problems, give the question and have the customer submit the answer
-func quiz(problems []questionsAndAnswers) int {
-	//keeps track of how many answers the user gets correct
 	correctAnswers := 0
+
 	for i, problem := range problems {
-		fmt.Printf("Problem # %d: %s = \n", i+1, problem.Question)
-		var answer string
-		fmt.Scanf("%s\n", &answer)
-		if answer == problem.Answer {
-			correctAnswers += 1
+		fmt.Printf("Problem # %d: %s = ", i+1, problem.Question)
+		//channel that will transfer data to be used later is the select statement
+		answerChannel := make(chan string)
+		//goroutine that take the user's input, and add their answer to the answer channel
+		go func() {
+			var answer string
+			fmt.Scanf("%s\n", &answer)
+			answerChannel <- answer
+		}()
+		select {
+		//if we get a response from the timer channel, then end the loop and return the score
+		case <-timer.C:
+			fmt.Printf("\nyour score is %d/%d\n", correctAnswers, len(problems))
+			return
+		//if we get a response from the answer channel, run the check to see if the answer the user input matches that of the answer to the problem
+		case answer := <-answerChannel:
+			if answer == problem.Answer {
+				correctAnswers += 1
+			}
 		}
 	}
-	return correctAnswers
+	fmt.Printf("your score is %d/%d\n", correctAnswers, len(problems))
 }
 
 //function to parse the questions and answers into a slice that will hold each question and answer struct
@@ -56,7 +70,7 @@ func parseQAndA(lines [][]string) []questionsAndAnswers {
 	for i, line := range lines {
 		parsedProblems[i] = questionsAndAnswers{
 			Question: line[0],
-			Answer:   line[1],
+			Answer:   strings.TrimSpace(line[1]),
 		}
 	}
 	return parsedProblems
