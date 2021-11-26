@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -17,9 +18,10 @@ type questionsAndAnswers struct {
 
 func main() {
 	//flag where the user can input a csv file with thier own problems
-	csvfile := flag.String("csv", "problems.csv", "A quiz game CLI application that takes in csv file in the format of `question,answer`")
+	csvfile := flag.String("csv", "problems.csv", "add in csv file in the format of `question,answer`")
 	//timelimit flag, this will allow users to customize the timelimit for the quiz
 	timeLimit := flag.Int("limit", 30, "time limit for the quiz in seconds")
+	shuffleQuiz := flag.Bool("shuffle", false, "Shuffles the quiz problems")
 	flag.Parse()
 
 	//opens the csv file to be able to read
@@ -32,7 +34,7 @@ func main() {
 	//turns contents of the csv file into something readable rather than just a pointer to the csv file contents
 	reader, _ := csv.NewReader(file).ReadAll()
 
-	problems := parseQAndA(reader)
+	problems := parseQAndA(reader, *shuffleQuiz)
 	//using the time package, this sets up the timer that will run the test for n seconds
 	timer := time.NewTimer(time.Duration(*timeLimit) * time.Second)
 
@@ -64,7 +66,7 @@ func main() {
 }
 
 //function to parse the questions and answers into a slice that will hold each question and answer struct
-func parseQAndA(lines [][]string) []questionsAndAnswers {
+func parseQAndA(lines [][]string, shuffleQuiz bool) []questionsAndAnswers {
 	//create a slice that will create new instances of the questionsAndAnswers struct that will be the length of the lines
 	parsedProblems := make([]questionsAndAnswers, len(lines))
 	for i, line := range lines {
@@ -72,6 +74,11 @@ func parseQAndA(lines [][]string) []questionsAndAnswers {
 			Question: line[0],
 			Answer:   strings.TrimSpace(line[1]),
 		}
+	}
+	if shuffleQuiz != false {
+		rand.Shuffle(len(parsedProblems), func(i, j int) {
+			parsedProblems[i], parsedProblems[j] = parsedProblems[j], parsedProblems[i]
+		})
 	}
 	return parsedProblems
 }
